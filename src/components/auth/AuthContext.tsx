@@ -32,9 +32,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  loginWithEmail: async () => {},
-  signUpWithEmail: async () => {},
-  logout: async () => {},
+  loginWithEmail: async () => { },
+  signUpWithEmail: async () => { },
+  logout: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -46,6 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Normalize path formatting to safely account for GitHub trailing slashes
   const cleanPathname = pathname === '/' ? '/' : pathname?.replace(/\/$/, '') || '/';
 
   useEffect(() => {
@@ -67,7 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthPage = AUTH_PAGES.includes(cleanPathname);
+    // FIX: Use .some() and .endsWith() to bypass subfolder prefixes like /Locked-In
+    const isAuthPage = AUTH_PAGES.some(page => cleanPathname.endsWith(page));
 
     if (!user && !isAuthPage) {
       // Not logged in, trying to access app pages
@@ -100,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Cleaned duplicate loading check block to handle initializing state
   if (loading) {
     return (
       <div
@@ -109,12 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '100vh',
-          background: 'var(--bg-base)',
-          color: 'var(--text-primary)',
+          background: 'var(--bg-base, #1E2124)',
+          color: 'var(--text-primary, #E8E6E2)',
           gap: 16,
         }}
       >
-        <div className="loader-logo" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.05em', fontFamily: 'var(--font-display)' }}>
+        <div className="loader-logo" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.05em', fontFamily: 'var(--font-display, sans-serif)' }}>
           Locked In
         </div>
         <div
@@ -122,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           style={{
             width: 32,
             height: 32,
-            border: '2px solid var(--accent-primary)',
+            border: '2px solid var(--accent-primary, #4E9E85)',
             borderRadius: '50%',
             opacity: 0.8,
             animation: 'pulsate 1.8s infinite ease-in-out',
@@ -148,8 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Prevent flash of unauthorized content
-  const isAuthPage = AUTH_PAGES.includes(cleanPathname);
+  // FIX: Safe fallbacks utilizing the unified subfolder path checker
+  const isAuthPage = AUTH_PAGES.some(page => cleanPathname.endsWith(page));
   if (!user && !isAuthPage) {
     return null;
   }
