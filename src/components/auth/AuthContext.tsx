@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const cleanPathname = pathname === '/' ? '/' : pathname?.replace(/\/$/, '') || '/';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthPage = AUTH_PAGES.includes(pathname);
+    const isAuthPage = AUTH_PAGES.includes(cleanPathname);
 
     if (!user && !isAuthPage) {
       // Not logged in, trying to access app pages
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Logged in, trying to access auth pages
       router.push('/dashboard');
     }
-  }, [user, loading, pathname, router]);
+  }, [user, loading, cleanPathname, router]);
 
   const loginWithEmail = async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -148,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Prevent flash of unauthorized content
-  const isAuthPage = AUTH_PAGES.includes(pathname);
+  const isAuthPage = AUTH_PAGES.includes(cleanPathname);
   if (!user && !isAuthPage) {
     return null;
   }

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 Locked-In — Documentation Workspace</title>
+    <style>
+        /* Modern, low-saturation premium minimalist gradient palette */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f5f2eb 0%, #eaf2ee 50%, #ece6f2 100%);
+            /* Sand, Mint Green, and Soft Lavender blend */
+            --text-primary: #2c302f;
+            --text-secondary: #5a615f;
+            --accent: #4a7c82;
+            /* Professional Muted Teal */
+            --border-subtle: rgba(74, 124, 130, 0.12);
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --code-bg: rgba(44, 48, 47, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 60px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .workspace-card {
+            max-width: 760px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.8);
+            padding: 45px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        header {
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .tagline {
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-subtle) 0%, rgba(0, 0, 0, 0) 100%);
+            margin: 24px 0;
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 14px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            font-size: 0.98rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid var(--border-subtle);
+            padding: 10px 22px;
+            border-radius: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: -0.01em;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            background: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(74, 124, 130, 0.15);
+        }
+
+        ul {
+            list-style-type: none;
+            margin-bottom: 20px;
+        }
+
+        li {
+            position: relative;
+            padding-left: 18px;
+            margin-bottom: 10px;
+            font-size: 0.96rem;
+        }
+
+        li::before {
+            content: "—";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .theme-pill {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--border-subtle);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.92rem;
+        }
+
+        th,
+        td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--accent);
+            background: rgba(74, 124, 130, 0.03);
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, "Roboto Mono", monospace;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #38403e;
+        }
+
+        pre {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--border-subtle);
+            padding: 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 0.85rem;
+            color: #333635;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="workspace-card">
+        <header>
+            <h1>🔒 Locked-In</h1>
+            <div class="tagline">Sleek. Minimal. Completely Dialed In.</div>
+        </header>
+
+        <p>A premium, distraction-free academic workspace combining a <strong>24-hour radial timeline</strong> with an
+            <strong>immersive Pomodoro ecosystem</strong>. Designed with a clean editorial aesthetic to eliminate
+            cognitive load and maximize deep focus cycles.</p>
+
+        <hr>
+
+        <h2>⚡ Live Production Node</h2>
+        <p>The static asset tree is fully compiled and accessible online:</p>
+        <a href="https://rashij-17.github.io/Locked-In/" target="_blank" class="btn">Launch Application →</a>
+
+        <hr>
+
+        <h2>🎨 Creative Theme Spectrum</h2>
+        <p>Dynamic configuration profiles mapping structural components to responsive system variables:</p>
+        <div class="theme-grid">
+            <div class="theme-pill">🌾 Sand (Default)</div>
+            <div class="theme-pill">🌑 Slate (Dark)</div>
+            <div class="theme-pill">📰 Paper (Stark)</div>
+            <div class="theme-pill">🌲 Forest (Sage)</div>
+            <div class="theme-pill">🌆 Dusk (Evening)</div>
+        </div>
+
+        <hr>
+
+        <h2>✨ Core Blueprint Features</h2>
+        <ul>
+            <li><strong>Radial Clock Layout:</strong> High-precision geometric 24-hour SVG matrix mapping active daily
+                items as clean, low-saturation progress arcs.</li>
+            <li><strong>Breathing Focus Space:</strong> Concentric countdown timer driven by weighted spring mechanics
+                and micro-pulses to govern rest intervals.</li>
+            <li><strong>Chronological Horizon:</strong> Fluid visual timeline sorting tasks into <code>Today</code>,
+                <code>Tomorrow</code>, and <code>Upcoming</code> priority lanes.</li>
+            <li><strong>Identity Gateways:</strong> Clean, minimalist route guards integrated directly with client-side
+                <strong>Firebase Authentication</strong>.</li>
+            <li><strong>Dual Sync Engine:</strong> Latency-free local caching managed via <strong>Zustand</strong>,
+                backed by structural streams to a secure cloud <strong>Supabase</strong> relational core.</li>
+        </ul>
+
+        <hr>
+
+        <h2>🛠️ Production Tech Stack</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Module</th>
+                    <th>Engine</th>
+                    <th>Functional Assignment</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Framework</strong></td>
+                    <td>Next.js 14 (App Router)</td>
+                    <td>Static code routing & isolated compilation maps</td>
+                </tr>
+                <tr>
+                    <td><strong>State Layer</strong></td>
+                    <td>Zustand + Caching</td>
+                    <td>Local storage state persistence & offline fallback management</td>
+                </tr>
+                <tr>
+                    <td><strong>Motion</strong></td>
+                    <td>Framer Motion</td>
+                    <td>Organic physics, subtle UI scaling, and inertial list paths</td>
+                </tr>
+                <tr>
+                    <td><strong>Database</strong></td>
+                    <td>Supabase (PostgreSQL)</td>
+                    <td>Relational configuration tables protected by explicit RLS barriers</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>🚀 Terminal Command Pipeline</h2>
+
+        <p><strong>Initialize Variables (<code>.env.local</code> in root):</strong></p>
+        <pre><code>NEXT_PUBLIC_FIREBASE_API_KEY=your_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_id
+
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key</code></pre>
+
+        <p><strong>Local Engineering Environment Initialization:</strong></p>
+        <pre><code>git clone https://github.com/Rashij-17/Locked-In.git
+cd Locked-In
+npm install
+npm run dev</code></pre>
+
+        <p><strong>Deploy Automated Update to Live GitHub Branch:</strong></p>
+        <pre><code>npm run deploy</code></pre>
+    </div>
+
+</body>
+
+</html>
