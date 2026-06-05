@@ -7,11 +7,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/auth/AuthContext';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signUpWithEmail } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,12 +32,7 @@ export default function SignupPage() {
     }
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, {
-          displayName: name.trim(),
-        });
-      }
+      await signUpWithEmail(email, password, name);
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Signup error:', err);

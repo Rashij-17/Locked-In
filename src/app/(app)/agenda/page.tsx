@@ -8,12 +8,12 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Check, ChevronRight, CalendarDays } from 'lucide-react';
+import { Plus, Check, CalendarDays } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
-import { getTodayStr, getTomorrowStr, isPast, isToday, isTomorrow, formatTimeDisplay, formatDuration, durationMinutes, formatDateDisplay } from '@/lib/timeUtils';
+import { getTodayStr, getTomorrowStr, isPast, formatTimeDisplay, formatDuration, durationMinutes, formatDateDisplay } from '@/lib/timeUtils';
 import TagPill from '@/components/ui/TagPill';
 import QuickAddModal from '@/components/ui/QuickAddModal';
-import type { Task, TagColorSlot } from '@/types';
+import type { Task } from '@/types';
 
 /* ---- Framer Motion variants ---- */
 const taskVariants = {
@@ -53,6 +53,7 @@ function TaskCard({ task }: { task: Task }) {
     <motion.div
       layout
       layoutId={task.id}
+      transition={{ type: 'spring', stiffness: 150, damping: 22 }}
       variants={taskVariants}
       initial="initial"
       animate="animate"
@@ -84,6 +85,11 @@ function TaskCard({ task }: { task: Task }) {
           {task.startTime && !task.endTime && (
             <span>{formatTimeDisplay(task.startTime)}</span>
           )}
+          {task.dueDate && task.dueDate !== getTodayStr() && (
+            <span style={{ marginLeft: 8, color: 'var(--text-tertiary)' }}>
+              ({formatDateDisplay(task.dueDate)})
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
           {tag && <TagPill name={tag.name} colorSlot={tag.colorSlot} size="sm" />}
@@ -95,40 +101,6 @@ function TaskCard({ task }: { task: Task }) {
         </div>
       </div>
     </motion.div>
-  );
-}
-
-/* ---- Completed Archive ---- */
-function CompletedArchive({ tasks }: { tasks: Task[] }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (tasks.length === 0) return null;
-
-  return (
-    <div className={`completed-archive ${isOpen ? 'completed-archive--open' : ''}`}>
-      <button className="completed-archive__header" onClick={() => setIsOpen(!isOpen)}>
-        <ChevronRight size={14} />
-        <span>{tasks.length} completed</span>
-      </button>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="completed-archive__list"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          >
-            {tasks.map((task) => (
-              <div key={task.id} className="completed-archive__item">
-                <Check size={12} style={{ color: 'var(--accent-mint)', flexShrink: 0 }} />
-                {task.title}
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
   );
 }
 
@@ -148,7 +120,7 @@ export default function AgendaPage() {
     return allTasks.filter((t) => t.tagId === activeFilter);
   }, [allTasks, activeFilter]);
 
-  // Bucket tasks into sections
+  // Bucket active tasks into proximity sections
   const overdue = useMemo(
     () => filteredTasks.filter((t) => !t.completed && t.dueDate && isPast(t.dueDate)),
     [filteredTasks]
@@ -160,26 +132,32 @@ export default function AgendaPage() {
         .sort((a, b) => (a.startTime || 'zz').localeCompare(b.startTime || 'zz')),
     [filteredTasks, todayStr]
   );
-  const todayCompleted = useMemo(
-    () => filteredTasks.filter((t) => t.completed && t.dueDate === todayStr),
-    [filteredTasks, todayStr]
-  );
-  const tomorrow = useMemo(
+  const tomorrowActive = useMemo(
     () =>
       filteredTasks
         .filter((t) => !t.completed && t.dueDate === tomorrowStr)
         .sort((a, b) => (a.startTime || 'zz').localeCompare(b.startTime || 'zz')),
     [filteredTasks, tomorrowStr]
   );
-  const upcoming = useMemo(() => {
+  const upcomingActive = useMemo(() => {
     return filteredTasks
-      .filter(
-        (t) => !t.completed && t.dueDate && t.dueDate > tomorrowStr
-      )
+      .filter((t) => !t.completed && t.dueDate && t.dueDate > tomorrowStr)
       .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
   }, [filteredTasks, tomorrowStr]);
 
-  const isEmpty = overdue.length === 0 && todayActive.length === 0 && todayCompleted.length === 0 && tomorrow.length === 0 && upcoming.length === 0;
+  // All completed tasks go to Settled Tasks at the bottom
+  const completedTasks = useMemo(() => {
+    return filteredTasks
+      .filter((t) => t.completed)
+      .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
+  }, [filteredTasks]);
+
+  const isEmpty =
+    overdue.length === 0 &&
+    todayActive.length === 0 &&
+    tomorrowActive.length === 0 &&
+    upcomingActive.length === 0 &&
+    completedTasks.length === 0;
 
   return (
     <>
@@ -231,71 +209,97 @@ export default function AgendaPage() {
         </div>
       )}
 
-      {/* Overdue section */}
-      {overdue.length > 0 && (
-        <>
-          <div className="section-header section-header--overdue">Overdue</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <AnimatePresence mode="popLayout">
-              {overdue.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </AnimatePresence>
+      {/* Chronological stacked timeline container */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        
+        {/* Overdue section */}
+        {overdue.length > 0 && (
+          <div>
+            <div className="section-header section-header--overdue">Overdue</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <AnimatePresence mode="popLayout">
+                {overdue.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
-        </>
-      )}
+        )}
 
-      {/* Today section */}
-      {(todayActive.length > 0 || todayCompleted.length > 0) && (
-        <>
-          <div className="section-header">Today</div>
+        {/* Today section */}
+        {todayActive.length > 0 && (
+          <div>
+            <div className="section-header">Today</div>
 
-          {/* Now indicator */}
-          <div className="now-indicator">
-            <div className="now-indicator__dot" />
-            <div className="now-indicator__label">Now</div>
-            <div className="now-indicator__line" />
+            {/* Now indicator */}
+            <div className="now-indicator" style={{ marginBottom: 12 }}>
+              <div className="now-indicator__dot" />
+              <div className="now-indicator__label">Now</div>
+              <div className="now-indicator__line" />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <AnimatePresence mode="popLayout">
+                {todayActive.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
+        )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <AnimatePresence mode="popLayout">
-              {todayActive.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </AnimatePresence>
+        {/* Tomorrow section */}
+        {tomorrowActive.length > 0 && (
+          <div>
+            <div className="section-header">Tomorrow</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <AnimatePresence mode="popLayout">
+                {tomorrowActive.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
+        )}
 
-          <CompletedArchive tasks={todayCompleted} />
-        </>
-      )}
-
-      {/* Tomorrow section */}
-      {tomorrow.length > 0 && (
-        <>
-          <div className="section-header">Tomorrow</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <AnimatePresence mode="popLayout">
-              {tomorrow.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </AnimatePresence>
+        {/* Upcoming section */}
+        {upcomingActive.length > 0 && (
+          <div>
+            <div className="section-header">Upcoming</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <AnimatePresence mode="popLayout">
+                {upcomingActive.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
-        </>
-      )}
+        )}
 
-      {/* Upcoming section */}
-      {upcoming.length > 0 && (
-        <>
-          <div className="section-header">Upcoming</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <AnimatePresence mode="popLayout">
-              {upcoming.map((task) => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </AnimatePresence>
+        {/* Settled Tasks section */}
+        {completedTasks.length > 0 && (
+          <div style={{ opacity: 0.5, borderTop: '1px solid var(--border-default)', paddingTop: 16 }}>
+            <div
+              className="section-header"
+              style={{
+                borderTop: 'none',
+                marginTop: 0,
+                paddingTop: 0,
+                marginBottom: 12,
+              }}
+            >
+              Settled Tasks
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <AnimatePresence mode="popLayout">
+                {completedTasks.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
 
       {/* Quick Add Modal */}
       <QuickAddModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} />

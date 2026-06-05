@@ -182,7 +182,17 @@ export default function FocusPage() {
   }, [resetTimer]);
 
   return (
-    <div className="focus-space" style={{ marginLeft: 0, padding: '40px 24px' }}>
+    <motion.div
+      className="focus-space"
+      style={{ marginLeft: 0, padding: '40px 24px', minHeight: '100vh', width: '100%' }}
+      animate={{
+        backgroundColor:
+          sessionType === 'focus'
+            ? 'var(--bg-base)'
+            : 'var(--bg-surface)',
+      }}
+      transition={{ duration: 3 }}
+    >
       {/* Ambient overlay (break transition) */}
       <AnimatePresence>
         {showAmbient && (
@@ -289,7 +299,19 @@ export default function FocusPage() {
       {/* SVG Timer Ring */}
       <div style={{ width: 280, height: 280, margin: '0 auto' }}>
         <svg viewBox="0 0 280 280" width="100%" height="100%">
-          <g className={timerState === 'running' ? 'timer-ring--active' : ''}>
+          <motion.g
+            animate={
+              timerState === 'running' && sessionType === 'focus'
+                ? { scale: [1, 1.02, 1] }
+                : { scale: 1 }
+            }
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{ originX: '140px', originY: '140px' }}
+          >
             {/* Track circle */}
             <circle
               cx={TIMER_CX}
@@ -319,7 +341,7 @@ export default function FocusPage() {
               transform={`rotate(-90 ${TIMER_CX} ${TIMER_CY})`}
               style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.8s ease' }}
             />
-          </g>
+          </motion.g>
 
           {/* Center time display */}
           <text
@@ -457,6 +479,6 @@ export default function FocusPage() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

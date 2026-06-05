@@ -1,25 +1,39 @@
 'use client';
 
 /* ============================================================
-   LOCKED IN — Auth Provider
+   LOCKED IN — Auth Context Provider (Firebase)
    Handles client-side Firebase Auth states, active loading screens,
-   and redirects for static builds (output: 'export').
+   redirects for static builds, and exposes authentication methods.
    ============================================================ */
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  updateProfile,
+  User,
+} from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
+import { useTaskStore } from '@/store/useTaskStore';
+import { useFocusStore } from '@/store/useFocusStore';
+import { useSettingsStore } from '@/store/useSettingsStore';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  loginWithEmail: async () => {},
+  signUpWithEmail: async () => {},
   logout: async () => {},
 });
 
@@ -27,7 +41,7 @@ export const useAuth = () => useContext(AuthContext);
 
 const AUTH_PAGES = ['/login', '/signup', '/forgot-password'];
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -37,6 +51,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
+
+      if (currentUser) {
+        // Asynchronously sync data from cloud if configured
+        useTaskStore.getState().syncFromSupabase();
+        useFocusStore.getState().syncFromSupabase();
+        useSettingsStore.getState().syncFromSupabase();
+      }
     });
 
     return () => unsubscribe();
@@ -56,6 +77,19 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     }
   }, [user, loading, pathname, router]);
 
+  const loginWithEmail = async (email: string, password: string) => {
+    await signInWithEmailAndPassword(auth, email.trim(), password);
+  };
+
+  const signUpWithEmail = async (email: string, password: string, name: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    if (userCredential.user) {
+      await updateProfile(userCredential.user, {
+        displayName: name.trim(),
+      });
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -74,7 +108,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '100vh',
-          background: 'var(--bg-default)',
+          background: 'var(--bg-base)',
           color: 'var(--text-primary)',
           gap: 16,
         }}
@@ -123,7 +157,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading, loginWithEmail, signUpWithEmail, logout }}>
       {children}
     </AuthContext.Provider>
   );

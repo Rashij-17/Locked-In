@@ -150,7 +150,7 @@ function ClockHand() {
 }
 
 /* ---- Sub-component: Center Info Panel ---- */
-function ClockCenter({ taskCount }: { taskCount: number }) {
+function ClockCenter({ completedCount, totalCount }: { completedCount: number; totalCount: number }) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -196,7 +196,7 @@ function ClockCenter({ taskCount }: { taskCount: number }) {
         fontSize={10}
         fontFamily="var(--font-body)"
       >
-        {taskCount} task{taskCount !== 1 ? 's' : ''} today
+        {completedCount}/{totalCount} Tasks Done
       </text>
     </g>
   );
@@ -329,7 +329,10 @@ export default function RadialClock() {
         <ClockHand />
 
         {/* Center info panel */}
-        <ClockCenter taskCount={tasks.length} />
+        <ClockCenter
+          completedCount={tasks.filter((t) => t.completed).length}
+          totalCount={tasks.length}
+        />
       </svg>
 
       {/* Arc Tooltip */}

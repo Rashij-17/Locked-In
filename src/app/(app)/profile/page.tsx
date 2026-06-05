@@ -7,7 +7,7 @@
    ============================================================ */
 
 import { useMemo } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthContext';
 import { useFocusStore } from '@/store/useFocusStore';
 import { useTaskStore } from '@/store/useTaskStore';
 import { LogOut, Target, Clock, Calendar, Check, AlertCircle } from 'lucide-react';

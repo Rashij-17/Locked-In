@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import ThemeProvider from '@/components/theme/ThemeProvider';
-import AuthProvider from '@/components/auth/AuthProvider';
+import { AuthProvider } from '@/components/auth/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Locked In — Plan the day. Own the hour.',

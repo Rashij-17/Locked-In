@@ -8,11 +8,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/auth/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { loginWithEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,7 +27,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      await loginWithEmail(email, password);
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);

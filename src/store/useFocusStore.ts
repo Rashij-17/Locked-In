@@ -3,12 +3,15 @@
 /* ============================================================
    LOCKED IN — Focus Store (Zustand)
    Manages Pomodoro timer state, session tracking, and controls.
+   Persists to local storage and syncs to Supabase if configured.
    ============================================================ */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { TimerState, SessionType, FocusSession } from '@/types';
 import { generateId } from '@/lib/timeUtils';
+import { supabase, getUuidFromUid, isSupabaseConfigured } from '@/lib/supabase';
+import { auth } from '@/lib/firebase';
 
 interface FocusStore {
   /* Timer state */
@@ -36,6 +39,9 @@ interface FocusStore {
   /* Session config helpers — these read from settings via parameters */
   initSession: (type: SessionType, durationMins: number) => void;
   completeSession: () => void;
+
+  /* --- Supabase Cloud Sync --- */
+  syncFromSupabase: () => Promise<void>;
 }
 
 export const useFocusStore = create<FocusStore>()(
@@ -79,6 +85,28 @@ export const useFocusStore = create<FocusStore>()(
             type: 'focus',
           };
           set((s) => ({ sessions: [...s.sessions, session] }));
+
+          if (isSupabaseConfigured && supabase) {
+            const user = auth.currentUser;
+            if (user) {
+              const userId = getUuidFromUid(user.uid);
+              supabase
+                .from('focus_sessions')
+                .insert({
+                  id: session.id,
+                  user_id: userId,
+                  task_id: session.taskId,
+                  started_at: session.startedAt,
+                  ended_at: session.endedAt,
+                  duration_sec: session.durationSec,
+                  completed: session.completed,
+                  type: session.type,
+                })
+                .then(({ error }) => {
+                  if (error) console.error('Error syncing focus session:', error);
+                });
+            }
+          }
         }
         set({ timerState: 'idle' });
       },
@@ -127,6 +155,58 @@ export const useFocusStore = create<FocusStore>()(
           timerState: 'idle',
           timeRemaining: 0,
         });
+
+        if (isSupabaseConfigured && supabase) {
+          const user = auth.currentUser;
+          if (user) {
+            const userId = getUuidFromUid(user.uid);
+            supabase
+              .from('focus_sessions')
+              .insert({
+                id: session.id,
+                user_id: userId,
+                task_id: session.taskId,
+                started_at: session.startedAt,
+                ended_at: session.endedAt,
+                duration_sec: session.durationSec,
+                completed: session.completed,
+                type: session.type,
+              })
+              .then(({ error }) => {
+                if (error) console.error('Error syncing focus session:', error);
+              });
+          }
+        }
+      },
+
+      /* ---- Cloud Sync ---- */
+      syncFromSupabase: async () => {
+        if (!isSupabaseConfigured || !supabase) return;
+        const user = auth.currentUser;
+        if (!user) return;
+        const userId = getUuidFromUid(user.uid);
+
+        try {
+          const { data: dbSessions, error } = await supabase
+            .from('focus_sessions')
+            .select('*')
+            .eq('user_id', userId);
+
+          if (!error && dbSessions) {
+            const sessions: FocusSession[] = dbSessions.map((s: any) => ({
+              id: s.id,
+              taskId: s.task_id,
+              startedAt: s.started_at,
+              endedAt: s.ended_at,
+              durationSec: s.duration_sec,
+              completed: s.completed,
+              type: s.type as any,
+            }));
+            set({ sessions });
+          }
+        } catch (err) {
+          console.error('Failed to sync focus sessions from cloud database:', err);
+        }
       },
     }),
     {

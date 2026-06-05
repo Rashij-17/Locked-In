@@ -7,7 +7,7 @@
 
 import { useSettingsStore } from '@/store/useSettingsStore';
 import type { ThemeName } from '@/types';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useAuth } from '@/components/auth/AuthContext';
 import Link from 'next/link';
 
 /* ---- Theme preview data ---- */
