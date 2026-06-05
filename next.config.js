@@ -8,7 +8,7 @@ const nextConfig = {
 
     // 2. Set the routing subpath only in production
     basePath: isProd ? '/Locked-In' : '',
-
+    trailingSlash: true,
     // 5. Turn off server image formatting dependencies
     images: {
         unoptimized: true,
