@@ -2,26 +2,30 @@
   "name": "locked-in",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
   "dependencies": {
+    "firebase": "^12.14.0",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^0.468.0",
     "next": "^14.2.29",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "zustand": "^5.0.14",
-    "framer-motion": "^11.18.2",
-    "lucide-react": "^0.468.0"
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
-    "typescript": "^5.7.3",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.29"
+    "eslint-config-next": "^14.2.29",
+    "gh-pages": "^6.3.0",
+    "typescript": "^5.7.3"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d out"
   }
 }

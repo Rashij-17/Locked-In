@@ -8,21 +8,41 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!email.trim() || !password.trim()) {
       setError('Please fill in all fields.');
       return;
     }
-    // In local mode, just redirect to dashboard
-    router.push('/dashboard');
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      router.push('/dashboard');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      if (
+        err.code === 'auth/invalid-credential' ||
+        err.code === 'auth/user-not-found' ||
+        err.code === 'auth/wrong-password'
+      ) {
+        setError('Invalid email or password.');
+      } else {
+        setError('Failed to sign in. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,8 +82,8 @@ export default function LoginPage() {
           />
         </div>
 
-        <button type="submit" className="btn btn--primary btn--full">
-          Sign In
+        <button type="submit" className="btn btn--primary btn--full" disabled={loading}>
+          {loading ? 'Signing In...' : 'Sign In'}
         </button>
 
         <Link href="/forgot-password" className="auth-card__link">

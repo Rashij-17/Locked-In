@@ -76,10 +76,13 @@ export default function SidebarNav() {
         })}
 
         {/* Profile link */}
-        <div className="sidebar__link" style={{ opacity: 0.6, cursor: 'default' }}>
+        <Link
+          href="/profile"
+          className={`sidebar__link ${pathname.startsWith('/profile') ? 'sidebar__link--active' : ''}`}
+        >
           <User />
           <span>Profile</span>
-        </div>
+        </Link>
       </div>
     </aside>
   );

@@ -7,6 +7,8 @@
 
 import { useSettingsStore } from '@/store/useSettingsStore';
 import type { ThemeName } from '@/types';
+import { useAuth } from '@/components/auth/AuthProvider';
+import Link from 'next/link';
 
 /* ---- Theme preview data ---- */
 const THEMES: { name: ThemeName; label: string; colors: string[] }[] = [
@@ -66,6 +68,7 @@ function RadioSelect({
 
 export default function SettingsPage() {
   const settings = useSettingsStore();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -211,11 +214,32 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ACCOUNT placeholder */}
+      {/* ACCOUNT */}
       <div className="settings-section">
         <div className="settings-section__title">Account</div>
-        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '12px 0' }}>
-          Sign in to sync your data across devices. Running in local mode.
+        <div style={{ padding: '12px 0' }}>
+          {user ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Signed in as <strong style={{ color: 'var(--text-primary)' }}>{user.displayName || user.email}</strong>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Link href="/profile" className="btn btn--secondary" style={{ padding: '8px 16px', fontSize: 13 }}>
+                  View Profile & History
+                </Link>
+                <button onClick={logout} className="btn btn--ghost" style={{ padding: '8px 16px', fontSize: 13, color: 'var(--accent-coral)' }}>
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
+              Not signed in.{' '}
+              <Link href="/login" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>
+                Sign In
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </>

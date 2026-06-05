@@ -12,12 +12,14 @@ import {
   ListOrdered,
   Target,
   Settings,
+  User,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Home', icon: Clock },
   { href: '/agenda', label: 'Agenda', icon: ListOrdered },
   { href: '/focus', label: 'Focus', icon: Target },
+  { href: '/profile', label: 'Profile', icon: User },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

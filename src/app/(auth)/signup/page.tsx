@@ -7,6 +7,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,9 +17,11 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError('Please fill in all fields.');
       return;
@@ -26,8 +30,29 @@ export default function SignupPage() {
       setError('Passwords do not match.');
       return;
     }
-    // In local mode, just redirect to dashboard
-    router.push('/dashboard');
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: name.trim(),
+        });
+      }
+      router.push('/dashboard');
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('This email is already in use.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address.');
+      } else {
+        setError('Failed to create account. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,8 +116,8 @@ export default function SignupPage() {
           />
         </div>
 
-        <button type="submit" className="btn btn--primary btn--full">
-          Create Account
+        <button type="submit" className="btn btn--primary btn--full" disabled={loading}>
+          {loading ? 'Creating Account...' : 'Create Account'}
         </button>
 
         <Link href="/login" className="auth-card__link">

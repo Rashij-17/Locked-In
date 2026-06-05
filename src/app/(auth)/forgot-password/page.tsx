@@ -6,15 +6,38 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setSent(true);
+    setError('');
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setSent(true);
+    } catch (err: any) {
+      console.error('Password reset error:', err);
+      if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address.');
+      } else {
+        setError('Failed to send reset link. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -24,6 +47,12 @@ export default function ForgotPasswordPage() {
         <div className="auth-card__tagline">
           {sent ? 'Check your email' : 'Reset your password'}
         </div>
+
+        {error && (
+          <div style={{ color: 'var(--accent-coral)', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
 
         {sent ? (
           <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
@@ -44,8 +73,8 @@ export default function ForgotPasswordPage() {
               />
             </div>
 
-            <button type="submit" className="btn btn--primary btn--full">
-              Send Reset Link
+            <button type="submit" className="btn btn--primary btn--full" disabled={loading}>
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
           </form>
         )}
