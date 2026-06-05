@@ -6,7 +6,7 @@ const nextConfig = {
     output: 'export',
 
     // 2. Set the base path (Match your exact GitHub repository name) only in production
-    basePath: isProd ? '/locked-in' : '',
+    basePath: isProd ? '/Locked-In' : '',
 
     // 3. Disable default image optimization (GitHub Pages can't process it server-side)
     images: {
