@@ -6,10 +6,13 @@ const nextConfig = {
     // 2. Set the routing subpath
     basePath: '/Locked-In',
 
-    // 3. CRUCIAL: Directs the browser precisely to your styling sheets (note the trailing slash)
+    // 3. Add trailing slashes to paths so GitHub Pages can serve /route/index.html
+    trailingSlash: true,
+
+    // 4. CRUCIAL: Directs the browser precisely to your styling sheets (note the trailing slash)
     assetPrefix: '/Locked-In/',
 
-    // 4. Turn off server image formatting dependencies
+    // 5. Turn off server image formatting dependencies
     images: {
         unoptimized: true,
     },
