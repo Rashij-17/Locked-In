@@ -5,10 +5,7 @@ An elegant, minimalist, and productivity-focused academic workspace combining a 
 ---
 
 ## ⚡ Quick Links
-* [Live Deployment](https://Rashij-17.github.io/locked-in/)
 * [Database Schema](./schema.sql)
-* [Report an Issue](https://github.com/Rashij-17/Locked-In/issues)
-
 ---
 
 ## ✨ Key Features
