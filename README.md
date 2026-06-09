@@ -2,7 +2,7 @@
 
 A premium, minimalist student planner web application built for deep focus and frictionless organization. 
 
-**[✨ Live Demo](https://rashij-17.github.io/Locked-In/)**
+**For live demo visit :- https://rashij-17.github.io/Locked-In/)**
 
 ---
 
