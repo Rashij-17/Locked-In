@@ -1,45 +1,33 @@
 'use client';
 
 /* ============================================================
-   LOCKED IN — Radial Clock Component
-   Full 24-hour SVG radial clock with task arcs, tick marks,
-   hour labels, center info panel, and live now-hand.
+   LOCKED IN — Orbit Ring Component
+   Full 24-hour SVG radial clock displaying today's sessions.
    ============================================================ */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTaskStore } from '@/store/useTaskStore';
-import { timeToAngle, polarToCartesian, buildArcPath, parseTime, formatTimeDisplay, formatDuration, durationMinutes, getTodayStr } from '@/lib/timeUtils';
-import type { Task, Tag } from '@/types';
-import TagPill from '@/components/ui/TagPill';
+import { useFocusStore } from '@/store/useFocusStore';
+import { timeToAngle, polarToCartesian, buildArcPath, getTodayStr, durationMinutes, formatDuration, formatTimeDisplay } from '@/lib/timeUtils';
+import type { Task, FocusSession } from '@/types';
 
 /* ---- Constants ---- */
 const CX = 240;
 const CY = 240;
 const VIEWBOX = '0 0 480 480';
-const TASK_ARC_R = 210;
-const TASK_ARC_R_INNER = 194; // For overlapping arcs
+const ORBIT_R = 210;
 const TICK_R_OUTER = 180;
 const TICK_R_MAJOR = 170;
 const TICK_R_MINOR = 175;
 const LABEL_R = 155;
 const CENTER_R = 90;
 
-/* ---- Tag color → CSS variable mapping ---- */
-const ARC_COLORS: Record<string, string> = {
-  sage: 'var(--clock-arc-1)',
-  amber: 'var(--clock-arc-2)',
-  violet: 'var(--clock-arc-3)',
-  coral: 'var(--clock-arc-4)',
-  mint: 'var(--clock-arc-5)',
-  sky: 'var(--clock-arc-1)',
-};
-
 /* ---- Tooltip State ---- */
 interface TooltipData {
   x: number;
   y: number;
-  task: Task;
-  tag: Tag | undefined;
+  session: FocusSession;
+  taskTitle: string;
 }
 
 /* ---- Sub-component: Clock Tick Marks ---- */
@@ -47,7 +35,6 @@ const ClockTicks = React.memo(function ClockTicks() {
   const ticks: React.ReactElement[] = [];
 
   for (let h = 0; h < 24; h++) {
-    // Major tick every hour
     const angle = timeToAngle(h, 0);
     const outer = polarToCartesian(CX, CY, TICK_R_OUTER, angle);
     const inner = polarToCartesian(CX, CY, TICK_R_MAJOR, angle);
@@ -64,7 +51,6 @@ const ClockTicks = React.memo(function ClockTicks() {
       />
     );
 
-    // Minor ticks every 15 min (skip the hour mark)
     for (let q = 1; q < 4; q++) {
       const minAngle = timeToAngle(h, q * 15);
       const mOuter = polarToCartesian(CX, CY, TICK_R_OUTER, minAngle);
@@ -92,7 +78,6 @@ const ClockLabels = React.memo(function ClockLabels() {
   const labels: React.ReactElement[] = [];
 
   for (let h = 0; h < 24; h += 1) {
-    // Only show every 3rd hour label to avoid crowding
     if (h % 3 !== 0) continue;
     const angle = timeToAngle(h, 0);
     const pos = polarToCartesian(CX, CY, LABEL_R, angle);
@@ -116,8 +101,8 @@ const ClockLabels = React.memo(function ClockLabels() {
   return <g className="clock-labels">{labels}</g>;
 });
 
-/* ---- Sub-component: Now Hand ---- */
-function ClockHand() {
+/* ---- Sub-component: Now Marker (Orbit Dot) ---- */
+function ClockMarker() {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -129,24 +114,24 @@ function ClockHand() {
   if (!now) return null;
 
   const angle = timeToAngle(now.getHours(), now.getMinutes());
-  const tip = polarToCartesian(CX, CY, 215, angle);
+  const tip = polarToCartesian(CX, CY, ORBIT_R, angle);
 
   return (
-    <g className="clock-hand" style={{ transition: 'transform 1s ease-in-out' }}>
-      <line
-        x1={CX}
-        y1={CY}
-        x2={tip.x}
-        y2={tip.y}
-        stroke="var(--clock-hand)"
-        strokeWidth={2}
-        strokeLinecap="round"
+    <g className="clock-marker" style={{ transition: 'transform 1s ease-in-out' }}>
+      <circle
+        cx={tip.x}
+        cy={tip.y}
+        r={7}
+        fill="none"
+        stroke="var(--border-focus)"
+        strokeWidth={1.5}
+        opacity={0.6}
       />
       <circle
         cx={tip.x}
         cy={tip.y}
         r={4}
-        fill="var(--clock-hand)"
+        fill="var(--border-focus)"
       />
     </g>
   );
@@ -206,82 +191,64 @@ function ClockCenter({ completedCount, totalCount }: { completedCount: number; t
   );
 }
 
-/* ---- Main Component: Radial Clock ---- */
+/* ---- Main Component: Orbit Ring (Radial Clock) ---- */
 export default function RadialClock() {
-  const allTasks = useTaskStore((s) => s.tasks);
-  const tags = useTaskStore((s) => s.tags);
+  const sessions = useFocusStore((s) => s.sessions);
+  const tasks = useTaskStore((s) => s.tasks);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
-  // Filter and sort today's tasks
-  const tasks = useMemo(() => {
-    const today = getTodayStr();
-    return allTasks
-      .filter((t) => t.dueDate === today)
-      .sort((a, b) => {
-        if (!a.startTime && !b.startTime) return 0;
-        if (!a.startTime) return 1;
-        if (!b.startTime) return -1;
-        return a.startTime.localeCompare(b.startTime);
-      });
-  }, [allTasks]);
+  // Filter tasks for center panel
+  const todayTasks = useMemo(() => {
+    const todayStr = getTodayStr();
+    return tasks.filter((t) => t.dueDate === todayStr);
+  }, [tasks]);
+  
+  const completedTodayTasks = todayTasks.filter(t => t.completed);
 
-  // Build tag lookup map
-  const tagMap = useMemo(() => {
-    const m = new Map<string, Tag>();
-    tags.forEach((t) => m.set(t.id, t));
+  // Build task lookup map
+  const taskMap = useMemo(() => {
+    const m = new Map<string, Task>();
+    tasks.forEach((t) => m.set(t.id, t));
     return m;
-  }, [tags]);
+  }, [tasks]);
 
-  // Filter tasks that have both start and end times (needed for arc rendering)
-  const arcTasks = useMemo(
-    () => tasks.filter((t) => t.startTime && t.endTime),
-    [tasks]
-  );
+  // Filter today's sessions
+  const todaySessions = useMemo(() => {
+    const todayStr = getTodayStr();
+    return sessions
+      .filter((s) => s.startedAt && s.startedAt.startsWith(todayStr))
+      .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  }, [sessions]);
 
-  // Detect overlapping arcs and assign radii
+  // Calculate arc data
   const arcData = useMemo(() => {
-    const sorted = [...arcTasks].sort((a, b) =>
-      (a.startTime || '').localeCompare(b.startTime || '')
-    );
+    return todaySessions.map((session) => {
+      const start = new Date(session.startedAt);
+      const end = session.endedAt ? new Date(session.endedAt) : new Date(); // In progress uses current time
+      
+      const startAngle = timeToAngle(start.getHours(), start.getMinutes());
+      const endAngle = timeToAngle(end.getHours(), end.getMinutes());
 
-    return sorted.map((task, i) => {
-      // Check if this task overlaps with the previous one
-      const prevTask = i > 0 ? sorted[i - 1] : null;
-      let radius = TASK_ARC_R;
-      if (
-        prevTask &&
-        prevTask.startTime &&
-        prevTask.endTime &&
-        task.startTime &&
-        task.startTime < prevTask.endTime
-      ) {
-        radius = TASK_ARC_R_INNER;
-      }
+      const isFocus = session.type === 'focus';
+      const color = isFocus ? 'var(--accent-primary)' : 'var(--text-tertiary)';
+      const strokeWidth = isFocus ? 14 : 6;
 
-      const startAngle = timeToAngle(
-        ...Object.values(parseTime(task.startTime!)) as [number, number]
-      );
-      const endAngle = timeToAngle(
-        ...Object.values(parseTime(task.endTime!)) as [number, number]
-      );
+      const taskTitle = session.taskId ? taskMap.get(session.taskId)?.title || 'Unknown Task' : (isFocus ? 'Focus Session' : 'Break');
 
-      const tag = task.tagId ? tagMap.get(task.tagId) : undefined;
-      const color = tag ? ARC_COLORS[tag.colorSlot] || 'var(--clock-arc-1)' : 'var(--clock-arc-1)';
-
-      return { task, startAngle, endAngle, radius, color, tag };
+      return { session, startAngle, endAngle, color, strokeWidth, taskTitle };
     });
-  }, [arcTasks, tagMap]);
+  }, [todaySessions, taskMap]);
 
   const handleArcHover = useCallback(
-    (e: React.MouseEvent, task: Task, tag: Tag | undefined) => {
+    (e: React.MouseEvent, session: FocusSession, taskTitle: string) => {
       const svgEl = (e.target as Element).closest('svg');
       if (!svgEl) return;
       const rect = svgEl.getBoundingClientRect();
       setTooltip({
         x: e.clientX - rect.left,
         y: e.clientY - rect.top - 10,
-        task,
-        tag,
+        session,
+        taskTitle,
       });
     },
     []
@@ -299,7 +266,7 @@ export default function RadialClock() {
         <circle
           cx={CX}
           cy={CY}
-          r={TASK_ARC_R}
+          r={ORBIT_R}
           fill="none"
           stroke="var(--clock-track)"
           strokeWidth={14}
@@ -312,29 +279,29 @@ export default function RadialClock() {
         {/* Hour labels */}
         <ClockLabels />
 
-        {/* Task arcs */}
-        {arcData.map(({ task, startAngle, endAngle, radius, color, tag }) => (
+        {/* Session arcs on the Orbit Ring */}
+        {arcData.map(({ session, startAngle, endAngle, color, strokeWidth, taskTitle }) => (
           <path
-            key={task.id}
-            d={buildArcPath(CX, CY, radius, startAngle, endAngle)}
+            key={session.id}
+            d={buildArcPath(CX, CY, ORBIT_R, startAngle, endAngle)}
             fill="none"
             stroke={color}
-            strokeWidth={14}
+            strokeWidth={strokeWidth}
             strokeLinecap="round"
-            opacity={task.completed ? 'var(--arc-completed-opacity)' : 'var(--arc-active-opacity)'}
-            style={{ cursor: 'pointer', transition: 'stroke-width 0.2s ease, opacity 0.3s ease' }}
-            onMouseMove={(e) => handleArcHover(e, task, tag)}
+            opacity={session.completed ? 'var(--arc-completed-opacity)' : 'var(--arc-active-opacity)'}
+            style={{ cursor: 'pointer', transition: 'stroke-width 0.2s ease, opacity 0.3s ease, stroke 0.4s ease' }}
+            onMouseMove={(e) => handleArcHover(e, session, taskTitle)}
             onMouseLeave={() => setTooltip(null)}
           />
         ))}
 
-        {/* Now hand */}
-        <ClockHand />
+        {/* Now marker */}
+        <ClockMarker />
 
         {/* Center info panel */}
         <ClockCenter
-          completedCount={tasks.filter((t) => t.completed).length}
-          totalCount={tasks.length}
+          completedCount={completedTodayTasks.length}
+          totalCount={todayTasks.length}
         />
       </svg>
 
@@ -357,23 +324,30 @@ export default function RadialClock() {
           }}
         >
           <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>
-            {tooltip.task.title}
+            {tooltip.taskTitle}
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
-            {tooltip.task.startTime && tooltip.task.endTime
-              ? `${formatTimeDisplay(tooltip.task.startTime)} – ${formatTimeDisplay(tooltip.task.endTime)}`
-              : 'No time set'}
+            {tooltip.session.startedAt ? (
+              `${formatTimeDisplay(tooltip.session.startedAt.split('T')[1].substring(0, 5))} – ${tooltip.session.endedAt ? formatTimeDisplay(tooltip.session.endedAt.split('T')[1].substring(0, 5)) : 'Now'}`
+            ) : 'No time set'}
           </div>
-          {tooltip.tag && (
-            <div style={{ marginBottom: 4 }}>
-              <TagPill name={tooltip.tag.name} colorSlot={tooltip.tag.colorSlot} size="sm" />
-            </div>
-          )}
-          {tooltip.task.startTime && tooltip.task.endTime && (
-            <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-              {formatDuration(durationMinutes(tooltip.task.startTime, tooltip.task.endTime))}
-            </div>
-          )}
+          <div style={{ marginBottom: 4 }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-full)',
+              fontSize: 11,
+              fontWeight: 500,
+              background: tooltip.session.type === 'focus' ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'var(--border-default)',
+              color: tooltip.session.type === 'focus' ? 'var(--accent-primary)' : 'var(--text-secondary)'
+            }}>
+              {tooltip.session.type === 'focus' ? 'Focus' : 'Break'}
+            </span>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+            {tooltip.session.completed ? 'Completed' : 'In Progress'} ({formatDuration(Math.round(tooltip.session.durationSec / 60))})
+          </div>
         </div>
       )}
     </div>
