@@ -22,10 +22,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <link rel="manifest" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/manifest.json`} />
+        <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#5B7E6E" />
-        <link rel="icon" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/favicon.png`} type="image/png" />
-        <link rel="apple-touch-icon" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/icon.png`} />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/icon.png" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
