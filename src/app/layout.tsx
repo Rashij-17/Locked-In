@@ -26,6 +26,21 @@ export default function RootLayout({
         <meta name="theme-color" content="#5B7E6E" />
         <link rel="icon" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/favicon.png`} type="image/png" />
         <link rel="apple-touch-icon" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/icon.png`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var stored = localStorage.getItem('locked-in-settings');
+                if (stored) {
+                  var parsed = JSON.parse(stored);
+                  if (parsed && parsed.state && parsed.state.theme) {
+                    document.documentElement.setAttribute('data-theme', parsed.state.theme);
+                  }
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider>
