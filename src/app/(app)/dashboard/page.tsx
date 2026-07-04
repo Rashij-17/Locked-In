@@ -5,7 +5,7 @@
    Orbit ring, Up Next, Stats, and Weekly Focus in Bento Grid.
    ============================================================ */
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import RadialClock from '@/components/radial/RadialClock';
 import QuickAddModal from '@/components/ui/QuickAddModal';
@@ -91,7 +91,7 @@ export default function DashboardPage() {
   }, [sessions]);
 
   return (
-    <>
+    <div className="dashboard-page">
       {/* Page header */}
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
@@ -117,7 +117,7 @@ export default function DashboardPage() {
           gap: 6
         }}>
           {streak > 0 ? (
-            <>🔥 {streak} day streak</>
+            <React.Fragment>🔥 {streak} day streak</React.Fragment>
           ) : (
             <span style={{ fontSize: 12, fontWeight: 500 }}>No streak yet</span>
           )}
@@ -140,7 +140,7 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {upNextTasks.map(task => (
                   <div key={task.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 4px, height: '100%', minHeight: 40, background: 'var(--accent-primary)', borderRadius: 2 }} />
+                    <div style={{ width: 4, height: '100%', minHeight: 40, background: 'var(--accent-primary)', borderRadius: 2 }} />
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{task.title}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
@@ -225,6 +225,6 @@ export default function DashboardPage() {
 
       {/* Quick Add Modal */}
       <QuickAddModal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} />
-    </>
+    </div>
   );
 }
