@@ -35,8 +35,7 @@ export default function SidebarNav() {
       {/* Logo */}
       <div className="sidebar__logo">
         <Link href="/dashboard" style={{ textDecoration: 'none', display: 'block' }}>
-          <h1>locked in</h1>
-          <span>STAY ON SCHEDULE</span>
+          <h1>Locked-In</h1>
         </Link>
       </div>
 

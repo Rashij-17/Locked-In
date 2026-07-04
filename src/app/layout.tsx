@@ -21,10 +21,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <link rel="manifest" href="/Locked-In/manifest.json" />
+        <link rel="manifest" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/manifest.json`} />
         <meta name="theme-color" content="#5B7E6E" />
-        <link rel="icon" href="/Locked-In/locked-in-logo-black.png?v=3" type="image/png" />
-        <link rel="apple-touch-icon" href="/Locked-In/locked-in-logo-black.png?v=3" />
+        <link rel="icon" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/locked-in-logo-black.png?v=3`} type="image/png" />
+        <link rel="apple-touch-icon" href={`${process.env.NODE_ENV === 'production' ? '/Locked-In' : ''}/locked-in-logo-black.png?v=3`} />
       </head>
       <body>
         <ThemeProvider>
