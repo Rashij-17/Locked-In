@@ -6,7 +6,7 @@
 
 *No harsh glows. No neon distractions. Just time, tasks, and quiet intention.*
 
-[**→ Live Demo**](https://rashij-17.github.io/Locked-In/)&nbsp;&nbsp;·&nbsp;&nbsp;[Report Bug](https://github.com/Rashij-17/Locked-In/issues)&nbsp;&nbsp;·&nbsp;&nbsp;[Request Feature](https://github.com/Rashij-17/Locked-In/issues)
+·&nbsp;&nbsp;[Report Bug](https://github.com/Rashij-17/Locked-In/issues)&nbsp;&nbsp;·&nbsp;&nbsp;[Request Feature](https://github.com/Rashij-17/Locked-In/issues)
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-76%25-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14-000000?style=for-the-badge&logo=next.js&logoColor=white)
@@ -18,7 +18,7 @@
 <br>
 
 <div align="center">
-  <img src="C:\Users\HP\OneDrive\Desktop\projects\Locked-in\dashboard.png" alt="Locked-In dashboard preview" width="85%" />
+  <img src="dashboard.png" alt="Locked-In dashboard preview" width="85%" />
   <br><em>The Dashboard — radial clock, daily agenda preview, and focus metrics at a glance.</em>
 </div>
 
