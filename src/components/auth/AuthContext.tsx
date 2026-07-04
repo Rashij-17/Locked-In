@@ -20,6 +20,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useTaskStore } from '@/store/useTaskStore';
 import { useFocusStore } from '@/store/useFocusStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import LockedInLogo from '@/components/ui/LockedInLogo';
 
 interface AuthContextType {
   user: User | null;
@@ -118,9 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           gap: 16,
         }}
       >
-        <div className="loader-logo" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '0.05em', fontFamily: 'var(--font-display, sans-serif)' }}>
-          Locked In
-        </div>
+        <LockedInLogo width={140} />
         <div
           className="pulsate-ring"
           style={{

@@ -15,6 +15,7 @@ import {
   Settings,
   User,
 } from 'lucide-react';
+import LockedInLogo from '@/components/ui/LockedInLogo';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: Clock },
@@ -33,9 +34,8 @@ export default function SidebarNav() {
   return (
     <aside className="sidebar" role="navigation" aria-label="Main navigation">
       {/* Logo */}
-      <div className="sidebar__logo">
-        <h1>Locked In</h1>
-        <span>Plan the day. Own the hour.</span>
+      <div className="sidebar__logo" style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 16px' }}>
+        <LockedInLogo width={140} />
       </div>
 
       {/* Main nav links */}

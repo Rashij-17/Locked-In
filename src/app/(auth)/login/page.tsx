@@ -9,6 +9,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthContext';
+import LockedInLogo from '@/components/ui/LockedInLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,8 +49,9 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <div className="auth-card__logo">Locked In</div>
-        <div className="auth-card__tagline">Plan the day. Own the hour.</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <LockedInLogo width={180} />
+        </div>
 
         {error && (
           <div style={{ color: 'var(--accent-coral)', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>

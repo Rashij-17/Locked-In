@@ -3,6 +3,7 @@ import './globals.css';
 import ThemeProvider from '@/components/theme/ThemeProvider';
 import { AuthProvider } from '@/components/auth/AuthContext';
 import RegisterSW from '@/components/pwa/RegisterSW';
+import InstallPrompt from '@/components/pwa/InstallPrompt';
 
 export const metadata: Metadata = {
   title: 'Locked In — Plan the day. Own the hour.',
@@ -29,6 +30,7 @@ export default function RootLayout({
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
         <RegisterSW />
+        <InstallPrompt />
       </body>
     </html>
   );

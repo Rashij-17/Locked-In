@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthContext';
+import LockedInLogo from '@/components/ui/LockedInLogo';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -53,7 +54,9 @@ export default function SignupPage() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <div className="auth-card__logo">Locked In</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+          <LockedInLogo width={160} />
+        </div>
         <div className="auth-card__tagline">Create your account</div>
 
         {error && (

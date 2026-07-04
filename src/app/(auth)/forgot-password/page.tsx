@@ -8,6 +8,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import LockedInLogo from '@/components/ui/LockedInLogo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -43,7 +44,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-card__logo">Locked In</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+          <LockedInLogo width={160} />
+        </div>
         <div className="auth-card__tagline">
           {sent ? 'Check your email' : 'Reset your password'}
         </div>
