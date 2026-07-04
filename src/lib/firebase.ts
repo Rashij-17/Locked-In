@@ -1,5 +1,5 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,5 +10,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// Firebase must only initialize in the browser.
+// During Next.js static generation (server-side), window is undefined
+// and calling getAuth() causes auth/invalid-api-key on every page.
+const isBrowser = typeof window !== 'undefined';
+
+const app: FirebaseApp | null = isBrowser
+  ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
+  : null;
+
+export const auth: Auth = (app ? getAuth(app) : null) as Auth;
+
