@@ -5,7 +5,7 @@
    ============================================================ */
 
 const BASE = '/Locked-In';
-const CACHE_NAME = 'locked-in-v1';
+const CACHE_NAME = 'locked-in-v2';
 
 const PRECACHE_URLS = [
   BASE + '/',
