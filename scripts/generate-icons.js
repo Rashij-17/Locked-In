@@ -29,43 +29,55 @@ function createPNG(width, height, bgHex, fgHex) {
   ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4);
   ihdr[8] = 8; ihdr[9] = 2; // 8-bit RGB
 
-  const cx = width / 2, cy = height / 2, outerR = width * 0.42, innerR = width * 0.28;
+  const cx = width / 2, cy = height / 2;
+  const radius = width * 0.35;
+  const thickness = width * 0.05;
   const rows = [];
+  
   for (let y = 0; y < height; y++) {
     const row = Buffer.alloc(1 + width * 3);
     row[0] = 0;
     for (let x = 0; x < width; x++) {
-      const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-      let R, G, B;
-      if (dist < innerR) {
-        // Inner circle: slightly lighter accent
-        R = Math.min(255, fgR + 30); G = Math.min(255, fgG + 30); B = Math.min(255, fgB + 30);
-      } else if (dist < outerR) {
-        // Ring: accent color
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      let R = bgR, G = bgG, B = bgB;
+      
+      // Draw outer circle
+      if (Math.abs(dist - radius) < thickness) {
         R = fgR; G = fgG; B = fgB;
-      } else {
-        // Background
-        R = bgR; G = bgG; B = bgB;
       }
+      // Draw minute hand (pointing up-right)
+      else if (dist < radius * 0.7 && Math.abs(dx - dy) < thickness && dx > 0 && dy < 0) {
+        R = fgR; G = fgG; B = fgB;
+      }
+      // Draw hour hand (pointing up)
+      else if (dist < radius * 0.5 && Math.abs(dx) < thickness / 2 && dy < 0) {
+        R = fgR; G = fgG; B = fgB;
+      }
+      // Draw center dot
+      else if (dist < thickness * 1.5) {
+        R = fgR; G = fgG; B = fgB;
+      }
+      
       row[1 + x * 3] = R; row[2 + x * 3] = G; row[3 + x * 3] = B;
     }
     rows.push(row);
   }
+  
   const compressed = zlib.deflateSync(Buffer.concat(rows));
   const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
   return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', compressed), chunk('IEND', Buffer.alloc(0))]);
 }
 
-fs.mkdirSync('public/icons', { recursive: true });
-fs.mkdirSync('public/sounds', { recursive: true });
+fs.mkdirSync('public', { recursive: true });
 
-const bg = '#F5F0E8', fg = '#5B7E6E';
-fs.writeFileSync('public/icons/icon-192.png', createPNG(192, 192, bg, fg));
-console.log('Created public/icons/icon-192.png');
-fs.writeFileSync('public/icons/icon-512.png', createPNG(512, 512, bg, fg));
-console.log('Created public/icons/icon-512.png');
+// Dark slate background, muted accent color for the line art
+const bg = '#0F172A', fg = '#94A3B8';
 
-// Favicon: minimal ICO wrapping a 32x32 PNG
+// favicon.ico (32x32)
+
 const png32 = createPNG(32, 32, bg, fg);
 const ico = Buffer.alloc(6 + 16 + png32.length);
 ico.writeUInt16LE(0, 0);
@@ -79,4 +91,3 @@ ico.writeUInt32LE(22, 18);
 png32.copy(ico, 22);
 fs.writeFileSync('public/favicon.ico', ico);
 console.log('Created public/favicon.ico');
-console.log('NOTE: public/sounds/reminder.mp3 directory created but file is missing — add a real MP3 manually.');

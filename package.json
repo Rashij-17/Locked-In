@@ -23,7 +23,6 @@
   },
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/generate-icons.js",
     "build": "next build && node scripts/copy-404.js",
     "start": "next start",
     "lint": "next lint",
