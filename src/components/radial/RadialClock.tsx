@@ -118,12 +118,15 @@ const ClockLabels = React.memo(function ClockLabels() {
 
 /* ---- Sub-component: Now Hand ---- */
 function ClockHand() {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(id);
   }, []);
+
+  if (!now) return null;
 
   const angle = timeToAngle(now.getHours(), now.getMinutes());
   const tip = polarToCartesian(CX, CY, 215, angle);
@@ -151,15 +154,16 @@ function ClockHand() {
 
 /* ---- Sub-component: Center Info Panel ---- */
 function ClockCenter({ completedCount, totalCount }: { completedCount: number; totalCount: number }) {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const timeStr = now ? `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}` : '--:--';
+  const dateStr = now ? now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '---';
 
   return (
     <g className="clock-center">

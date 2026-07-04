@@ -12,13 +12,18 @@ import { motion } from 'framer-motion';
 
 export default function RootPage() {
   const router = useRouter();
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | null>(null);
 
   // Clock ticking
   useEffect(() => {
+    setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Use a fixed default time (10:10) during SSR/initial render to prevent hydration mismatch
+  const hours = time ? time.getHours() : 10;
+  const minutes = time ? time.getMinutes() : 10;
 
   // Client-side redirect to dashboard after the landing animation (3.8 seconds)
   useEffect(() => {
@@ -79,7 +84,7 @@ export default function RootPage() {
               transformOrigin: 'bottom',
               bottom: '50%',
             }}
-            animate={{ rotate: time.getHours() * 30 + time.getMinutes() * 0.5 }}
+            animate={{ rotate: hours * 30 + minutes * 0.5 }}
             transition={{ type: 'spring', stiffness: 50 }}
           />
           {/* Minute Hand */}
@@ -93,7 +98,7 @@ export default function RootPage() {
               transformOrigin: 'bottom',
               bottom: '50%',
             }}
-            animate={{ rotate: time.getMinutes() * 6 }}
+            animate={{ rotate: minutes * 6 }}
             transition={{ type: 'spring', stiffness: 70 }}
           />
           {/* Center Dots */}

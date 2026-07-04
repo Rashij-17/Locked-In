@@ -63,7 +63,7 @@ export default function DashboardPage() {
       <div className="page-header">
         <div>
           <h1 className="page-header__title">Dashboard</h1>
-          <p className="page-header__subtitle">
+          <p className="page-header__subtitle" suppressHydrationWarning>
             {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
