@@ -425,18 +425,23 @@ input, textarea, select {
 
 .sidebar__logo h1 {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 24px;
+  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  margin: 0;
 }
 
 .sidebar__logo span {
   display: block;
   font-family: var(--font-body);
-  font-size: 11px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  letter-spacing: 0.04em;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 .sidebar__nav {
