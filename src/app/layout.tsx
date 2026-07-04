@@ -23,8 +23,8 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link rel="manifest" href="/Locked-In/manifest.json" />
         <meta name="theme-color" content="#5B7E6E" />
-        <link rel="icon" href="/Locked-In/locked-in-logo.svg?v=2" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/Locked-In/locked-in-logo.svg?v=2" />
+        <link rel="icon" href="/Locked-In/locked-in-logo-black.png?v=3" type="image/png" />
+        <link rel="apple-touch-icon" href="/Locked-In/locked-in-logo-black.png?v=3" />
       </head>
       <body>
         <ThemeProvider>

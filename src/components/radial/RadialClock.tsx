@@ -292,8 +292,7 @@ export default function RadialClock() {
       <svg
         viewBox={VIEWBOX}
         width="100%"
-        height="auto"
-        style={{ overflow: 'visible' }}
+        style={{ overflow: 'visible', height: 'auto' }}
         onMouseLeave={() => setTooltip(null)}
       >
         {/* Track ring (background) */}
