@@ -9,6 +9,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import type { ThemeName } from '@/types';
 import { useAuth } from '@/components/auth/AuthContext';
 import Link from 'next/link';
+import { usePushSubscription } from '@/lib/usePushSubscription';
 
 /* ---- Theme preview data ---- */
 const THEMES: { name: ThemeName; label: string; colors: string[] }[] = [
@@ -69,6 +70,7 @@ function RadioSelect({
 export default function SettingsPage() {
   const settings = useSettingsStore();
   const { user, logout } = useAuth();
+  const push = usePushSubscription();
 
   return (
     <>
@@ -195,6 +197,33 @@ export default function SettingsPage() {
             <div className="settings-row__desc">Get notified before tasks are due</div>
           </div>
           <Toggle on={settings.taskRemindersEnabled} onToggle={settings.toggleTaskReminders} />
+        </div>
+
+        {/* Background push — works even when app is closed */}
+        <div className="settings-row">
+          <div>
+            <div className="settings-row__label">Background push notifications</div>
+            <div className="settings-row__desc">
+              {push.status === 'unsupported'
+                ? 'Not supported on this browser'
+                : push.status === 'subscribed'
+                  ? '✓ This device will receive reminders even when the app is closed'
+                  : 'Notify me even when the app is closed / phone is locked'}
+            </div>
+          </div>
+          {push.status === 'unsupported' ? (
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>N/A</span>
+          ) : push.status === 'loading' ? (
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>…</span>
+          ) : (
+            <button
+              className={push.status === 'subscribed' ? 'btn btn--ghost' : 'btn btn--primary'}
+              style={{ padding: '6px 14px', fontSize: 13, minHeight: 36 }}
+              onClick={push.status === 'subscribed' ? push.unsubscribe : push.subscribe}
+            >
+              {push.status === 'subscribed' ? 'Disable' : 'Enable'}
+            </button>
+          )}
         </div>
 
         <div className="settings-row">

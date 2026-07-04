@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Check, CalendarDays } from 'lucide-react';
+import { Plus, Check, CalendarDays, Trash2 } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
 import { getTodayStr, getTomorrowStr, isPast, formatTimeDisplay, formatDuration, durationMinutes, formatDateDisplay } from '@/lib/timeUtils';
 import TagPill from '@/components/ui/TagPill';
@@ -35,6 +35,7 @@ const taskVariants = {
 /* ---- Task Card Sub-Component ---- */
 function TaskCard({ task }: { task: Task }) {
   const toggleComplete = useTaskStore((s) => s.toggleComplete);
+  const deleteTask = useTaskStore((s) => s.deleteTask);
   const getTagById = useTaskStore((s) => s.getTagById);
   const tag = task.tagId ? getTagById(task.tagId) : undefined;
 
@@ -42,8 +43,8 @@ function TaskCard({ task }: { task: Task }) {
     task.priority === 'high'
       ? ''
       : task.priority === 'medium'
-      ? 'priority-dots--medium'
-      : 'priority-dots--low';
+        ? 'priority-dots--medium'
+        : 'priority-dots--low';
 
   const borderColor = tag
     ? `var(--tag-${tag.colorSlot})`
@@ -100,6 +101,29 @@ function TaskCard({ task }: { task: Task }) {
           </div>
         </div>
       </div>
+
+      {/* Trash button — only for completed tasks */}
+      {task.completed && (
+        <button
+          onClick={() => deleteTask(task.id)}
+          aria-label="Delete task"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-tertiary)',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            opacity: 0.6,
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--danger, #c0392b)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.6'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-tertiary)'; }}
+        >
+          <Trash2 size={14} strokeWidth={1.8} />
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -108,6 +132,7 @@ function TaskCard({ task }: { task: Task }) {
 export default function AgendaPage() {
   const allTasks = useTaskStore((s) => s.tasks);
   const tags = useTaskStore((s) => s.tags);
+  const deleteTask = useTaskStore((s) => s.deleteTask);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
@@ -211,7 +236,7 @@ export default function AgendaPage() {
 
       {/* Chronological stacked timeline container */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        
+
         {/* Overdue section */}
         {overdue.length > 0 && (
           <div>
@@ -286,9 +311,27 @@ export default function AgendaPage() {
                 marginTop: 0,
                 paddingTop: 0,
                 marginBottom: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
               }}
             >
-              Settled Tasks
+              <span>Settled Tasks</span>
+              <button
+                onClick={() => completedTasks.forEach((t) => deleteTask(t.id))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-tertiary)',
+                  fontSize: '0.75rem',
+                  padding: '2px 4px',
+                  fontFamily: 'inherit',
+                }}
+                aria-label="Clear all completed tasks"
+              >
+                Clear all
+              </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <AnimatePresence mode="popLayout">

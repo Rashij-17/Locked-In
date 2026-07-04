@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import ThemeProvider from '@/components/theme/ThemeProvider';
 import { AuthProvider } from '@/components/auth/AuthContext';
+import RegisterSW from '@/components/pwa/RegisterSW';
 
 export const metadata: Metadata = {
   title: 'Locked In — Plan the day. Own the hour.',
@@ -19,14 +20,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#F5F0E8" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/Locked-In/manifest.json" />
+        <meta name="theme-color" content="#5B7E6E" />
+        <link rel="icon" href="/Locked-In/favicon.ico" />
       </head>
       <body>
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
+        <RegisterSW />
       </body>
     </html>
   );

@@ -70,3 +70,42 @@ CREATE POLICY "Own settings" ON user_settings FOR ALL USING (auth.uid() = user_i
 
 -- Default tags (inserted via application code after signup)
 -- See src/types/index.ts DEFAULT_TAGS
+
+-- ============================================================
+-- Web Push Subscriptions
+-- Stores one row per device per user for background notifications.
+-- ============================================================
+
+CREATE TABLE push_subscriptions (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint      TEXT NOT NULL UNIQUE,
+  p256dh        TEXT NOT NULL,
+  auth          TEXT NOT NULL,
+  timezone      TEXT NOT NULL DEFAULT 'Asia/Kolkata',
+  reminder_mins INT  NOT NULL DEFAULT 15,
+  created_at    TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Own push subscriptions"
+  ON push_subscriptions FOR ALL USING (auth.uid() = user_id);
+
+-- Tracks which push notifications have been sent recently
+-- (prevents duplicate pushes within a 30-minute window)
+CREATE TABLE push_notifications_sent (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subscription_id UUID REFERENCES push_subscriptions(id) ON DELETE CASCADE,
+  task_id         UUID REFERENCES tasks(id) ON DELETE CASCADE,
+  sent_at         TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE push_notifications_sent ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role only"
+  ON push_notifications_sent FOR ALL
+  USING (true);  -- Edge Function uses service role key, bypasses RLS
+
+-- Index for fast dedup lookup
+CREATE INDEX idx_push_sent_lookup
+  ON push_notifications_sent(subscription_id, task_id, sent_at);
+
