@@ -16,7 +16,7 @@ export default function LockedInLogo({ width = 160, className = '' }: LockedInLo
 
   return (
     <img
-      src={`${base}/locked-in-logo-transparent.png?v=4`}
+      src={`${base}/icon.png`}
       alt="Locked In Logo"
       width={width}
       style={{
