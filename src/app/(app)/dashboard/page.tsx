@@ -144,7 +144,7 @@ export default function DashboardPage() {
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{task.title}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
-                        {task.startTime}{task.endTime ? ` • ${formatDuration(durationMinutes(task.startTime, task.endTime))}` : ''}
+                        {task.startTime}{task.endTime ? ` • ${formatDuration(durationMinutes(task.startTime!, task.endTime))}` : ''}
                       </div>
                     </div>
                   </div>
