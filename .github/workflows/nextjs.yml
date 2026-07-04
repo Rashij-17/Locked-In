@@ -77,6 +77,15 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
         env:
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyDyBBv94lbwUe7Nsp4BNH4H9l5931D-bL0
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: locked-in-3dfae.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: locked-in-3dfae
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: locked-in-3dfae.firebasestorage.app
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "888486632312"
+          NEXT_PUBLIC_FIREBASE_APP_ID: 1:888486632312:web:19169a5af40766344b868d
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: G-64GHLXCY84
+          NEXT_PUBLIC_SUPABASE_URL: https://fozealrfyeulvphmtpro.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
