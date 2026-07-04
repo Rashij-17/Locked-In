@@ -124,7 +124,7 @@ export default function InstallPrompt() {
 
         {/* Header with logo */}
         <div className="install-logo-wrap">
-          <LockedInLogo width={140} />
+          <LockedInLogo width={240} />
         </div>
 
         {installed ? (

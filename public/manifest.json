@@ -10,7 +10,7 @@
   "theme_color": "#5B7E6E",
   "icons": [
     {
-      "src": "locked-in-logo-black.png?v=3",
+      "src": "locked-in-logo-transparent.png?v=4",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
