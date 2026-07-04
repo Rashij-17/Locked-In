@@ -2,21 +2,21 @@
   "name": "Locked In",
   "short_name": "Locked In",
   "description": "Plan the day. Own the hour.",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/Locked-In/",
+  "scope": "/Locked-In/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#F5F0E8",
   "theme_color": "#5B7E6E",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "/Locked-In/icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "favicon.png",
+      "src": "/Locked-In/favicon.png",
       "sizes": "32x32",
       "type": "image/png"
     }
