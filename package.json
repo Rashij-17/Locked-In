@@ -24,7 +24,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/generate-icons.js",
-    "build": "next build && node -e \"require('fs').copyFileSync('out/index.html', 'out/404.html')\"",
+    "build": "next build && node scripts/copy-404.js",
     "start": "next start",
     "lint": "next lint",
     "predeploy": "npm run build",
