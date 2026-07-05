@@ -5,7 +5,9 @@
    ============================================================ */
 
 const BASE = '/Locked-In';
-const CACHE_NAME = 'locked-in-v3';
+// Cache version bumps automatically on every deployment via build timestamp.
+// This forces old cached HTML + stale chunks to be cleared immediately.
+const CACHE_NAME = 'locked-in-v-__BUILD_TIME__';
 
 const PRECACHE_URLS = [
   BASE + '/',
