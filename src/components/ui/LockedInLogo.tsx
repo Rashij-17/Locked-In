@@ -16,7 +16,7 @@ interface LockedInLogoProps {
 export default function LockedInLogo({ width = 160, className = '' }: LockedInLogoProps) {
   return (
     <Image
-      src="/favicon.svg"
+      src="/logo.png"
       alt="Locked In Logo"
       width={width}
       height={width}
