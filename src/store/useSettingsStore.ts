@@ -86,9 +86,23 @@ export const useSettingsStore = create<SettingsStore>()(
         });
       },
       toggleCompactMode: () => set((s) => ({ compactMode: !s.compactMode })),
-      toggleTaskReminders: () => set((s) => ({ taskRemindersEnabled: !s.taskRemindersEnabled })),
+      toggleTaskReminders: () => {
+        const current = get().taskRemindersEnabled;
+        const next = !current;
+        if (next && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => {});
+        }
+        set({ taskRemindersEnabled: next });
+      },
       setTaskReminderMins: (taskReminderMins) => set({ taskReminderMins }),
-      toggleFocusReminders: () => set((s) => ({ focusRemindersEnabled: !s.focusRemindersEnabled })),
+      toggleFocusReminders: () => {
+        const current = get().focusRemindersEnabled;
+        const next = !current;
+        if (next && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => {});
+        }
+        set({ focusRemindersEnabled: next });
+      },
       toggleDailyDigest: () => set((s) => ({ dailyDigestEnabled: !s.dailyDigestEnabled })),
       setDailyDigestTime: (dailyDigestTime) => set({ dailyDigestTime }),
 
