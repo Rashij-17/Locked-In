@@ -2,7 +2,9 @@
 
 /* ============================================================
    LOCKED IN — Logo Component
-   Uses next/image so basePath is applied automatically.
+   Manually prefixes src with NEXT_PUBLIC_BASE_PATH because
+   next/image with `unoptimized: true` (required for static
+   export) does NOT automatically apply basePath to the URL.
    ============================================================ */
 
 import Image from 'next/image';
@@ -13,10 +15,12 @@ interface LockedInLogoProps {
   className?: string;
 }
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
 export default function LockedInLogo({ width = 160, className = '' }: LockedInLogoProps) {
   return (
     <Image
-      src="/logo.png"
+      src={`${BASE}/logo.png`}
       alt="Locked In Logo"
       width={width}
       height={width}
