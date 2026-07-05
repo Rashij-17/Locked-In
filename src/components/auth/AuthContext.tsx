@@ -52,6 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const cleanPathname = pathname === '/' ? '/' : pathname?.replace(/\/$/, '') || '/';
 
   useEffect(() => {
+    // auth is null during static generation (server-side) — only subscribe in browser
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -131,25 +137,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             animation: 'pulsate 1.8s infinite ease-in-out',
           }}
         />
-        <style jsx global>{`
-          @keyframes pulsate {
-            0% {
-              transform: scale(0.6);
-              opacity: 0.2;
-            }
-            50% {
-              transform: scale(1);
-              opacity: 0.8;
-            }
-            100% {
-              transform: scale(0.6);
-              opacity: 0.2;
-            }
-          }
-        `}</style>
       </div>
     );
   }
+
 
   // FIX: Safe fallbacks utilizing the unified subfolder path checker
   const isAuthPage = AUTH_PAGES.some(page => cleanPathname.endsWith(page));

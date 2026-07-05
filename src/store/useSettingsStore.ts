@@ -127,7 +127,7 @@ export const useSettingsStore = create<SettingsStore>()(
             .from('user_settings')
             .select('*')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
           if (!error && data) {
             set({
