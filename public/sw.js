@@ -10,8 +10,8 @@ const CACHE_NAME = 'locked-in-v3';
 const PRECACHE_URLS = [
   BASE + '/',
   BASE + '/manifest.json',
-  BASE + '/icon.png',
-  BASE + '/favicon.png',
+  BASE + '/web-app-manifest-512x512.png',
+  BASE + '/favicon.ico',
 ];
 
 /* ---- Install: precache app shell ---- */
@@ -67,8 +67,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: BASE + '/icon.png',
-    badge: BASE + '/favicon.png',
+    icon: BASE + '/web-app-manifest-512x512.png',
+    badge: BASE + '/favicon-96x96.png',
     vibrate: [200, 100, 200],
     data: { url: data.url || BASE + '/' },
     tag: data.tag || 'locked-in-reminder',

@@ -1,9 +1,11 @@
 'use client';
 
 /* ============================================================
-   LOCKED IN — SVG Logo Component
-   Inline SVG so it can be themed via CSS currentColor.
+   LOCKED IN — Logo Component
+   Uses next/image so basePath is applied automatically.
    ============================================================ */
+
+import Image from 'next/image';
 
 interface LockedInLogoProps {
   /** Width of the logo in px (height auto-scales via aspect ratio). */
@@ -12,19 +14,19 @@ interface LockedInLogoProps {
 }
 
 export default function LockedInLogo({ width = 160, className = '' }: LockedInLogoProps) {
-  const base = typeof window !== 'undefined' && process.env.NODE_ENV === 'production' ? '/Locked-In' : '';
-
   return (
-    <img
-      src={`${base}/icon.png`}
+    <Image
+      src="/favicon.svg"
       alt="Locked In Logo"
       width={width}
+      height={width}
       style={{
         width: `${width}px`,
         height: 'auto',
         objectFit: 'contain',
         display: 'block',
         margin: '0 auto',
+        borderRadius: '16px',
       }}
       className={className}
     />

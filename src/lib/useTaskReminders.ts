@@ -64,7 +64,7 @@ export function useTaskReminders() {
           try {
             new Notification(`⏰ ${task.title}`, {
               body: `Due in ${Math.round(minsUntilDue)} min${Math.round(minsUntilDue) !== 1 ? 's' : ''}`,
-              icon: `${BASE}/icon.png`,
+              icon: `${BASE}/web-app-manifest-512x512.png`,
               tag: `reminder-${task.id}`,
               silent: false,
             });
