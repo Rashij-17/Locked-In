@@ -10,7 +10,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { UserSettings, ThemeName } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
-import { supabase, getUuidFromUid, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabaseUserId, showStorageErrorToast } from '@/lib/supabase';
 import { auth } from '@/lib/firebase';
 
 interface SettingsStore extends UserSettings {
@@ -108,10 +108,7 @@ export const useSettingsStore = create<SettingsStore>()(
 
       /* ---- Sync implementation ---- */
       syncToSupabase: async (updates) => {
-        if (!isSupabaseConfigured || !supabase) return;
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
-        const userId = getUuidFromUid(currentUser.uid);
+        if (!isSupabaseConfigured || !supabase || !supabaseUserId) return;
 
         const dbUpdates: any = {};
         if (updates.theme !== undefined) dbUpdates.theme = updates.theme;
@@ -122,28 +119,33 @@ export const useSettingsStore = create<SettingsStore>()(
         if (updates.autoStartBreaks !== undefined) dbUpdates.auto_start = updates.autoStartBreaks;
 
         try {
-          await supabase
+          const { error } = await supabase
             .from('user_settings')
-            .upsert({ user_id: userId, ...dbUpdates }, { onConflict: 'user_id' });
+            .upsert({ user_id: supabaseUserId, ...dbUpdates }, { onConflict: 'user_id' });
+          if (error) {
+            console.error('Failed to sync settings to cloud database:', error);
+            showStorageErrorToast('Failed to sync settings to cloud.');
+          }
         } catch (err) {
           console.error('Failed to sync settings to cloud database:', err);
+          showStorageErrorToast('Failed to sync settings to cloud.');
         }
       },
 
       syncFromSupabase: async () => {
-        if (!isSupabaseConfigured || !supabase) return;
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
-        const userId = getUuidFromUid(currentUser.uid);
+        if (!isSupabaseConfigured || !supabase || !supabaseUserId) return;
 
         try {
           const { data, error } = await supabase
             .from('user_settings')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', supabaseUserId)
             .maybeSingle();
 
-          if (!error && data) {
+          if (error) {
+            console.error('Failed to sync settings from cloud database:', error);
+            showStorageErrorToast('Failed to load settings from cloud.');
+          } else if (data) {
             set({
               theme: (data.theme as ThemeName) || get().theme,
               focusMins: data.focus_mins ?? get().focusMins,
@@ -155,6 +157,7 @@ export const useSettingsStore = create<SettingsStore>()(
           }
         } catch (err) {
           console.error('Failed to sync settings from cloud database:', err);
+          showStorageErrorToast('Cloud storage synchronization failed.');
         }
       },
     }),

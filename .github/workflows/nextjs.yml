@@ -76,6 +76,14 @@ jobs:
           BUILD_TIME=$(date +%s)
           sed -i "s/__BUILD_TIME__/$BUILD_TIME/g" public/sw.js
           echo "SW cache version: locked-in-v-$BUILD_TIME"
+      - name: Verify required secrets
+        run: |
+          if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "ERROR: NEXT_PUBLIC_SUPABASE_ANON_KEY secret is not set!"
+            exit 1
+          fi
+        env:
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
         env:

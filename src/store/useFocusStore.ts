@@ -10,7 +10,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { TimerState, SessionType, FocusSession } from '@/types';
 import { generateId } from '@/lib/timeUtils';
-import { supabase, getUuidFromUid, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabaseUserId, showStorageErrorToast } from '@/lib/supabase';
 import { auth } from '@/lib/firebase';
 
 interface FocusStore {
@@ -86,26 +86,25 @@ export const useFocusStore = create<FocusStore>()(
           };
           set((s) => ({ sessions: [...s.sessions, session] }));
 
-          if (isSupabaseConfigured && supabase) {
-            const user = auth.currentUser;
-            if (user) {
-              const userId = getUuidFromUid(user.uid);
-              supabase
-                .from('focus_sessions')
-                .insert({
-                  id: session.id,
-                  user_id: userId,
-                  task_id: session.taskId,
-                  started_at: session.startedAt,
-                  ended_at: session.endedAt,
-                  duration_sec: session.durationSec,
-                  completed: session.completed,
-                  type: session.type,
-                })
-                .then(({ error }) => {
-                  if (error) console.error('Error syncing focus session:', error);
-                });
-            }
+          if (isSupabaseConfigured && supabase && supabaseUserId) {
+            supabase
+              .from('focus_sessions')
+              .insert({
+                id: session.id,
+                user_id: supabaseUserId,
+                task_id: session.taskId,
+                started_at: session.startedAt,
+                ended_at: session.endedAt,
+                duration_sec: session.durationSec,
+                completed: session.completed,
+                type: session.type,
+              })
+              .then(({ error }) => {
+                if (error) {
+                  console.error('Error syncing focus session:', error);
+                  showStorageErrorToast('Failed to sync skipped session to cloud.');
+                }
+              });
           }
         }
         set({ timerState: 'idle' });
@@ -156,43 +155,42 @@ export const useFocusStore = create<FocusStore>()(
           timeRemaining: 0,
         });
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            const userId = getUuidFromUid(user.uid);
-            supabase
-              .from('focus_sessions')
-              .insert({
-                id: session.id,
-                user_id: userId,
-                task_id: session.taskId,
-                started_at: session.startedAt,
-                ended_at: session.endedAt,
-                duration_sec: session.durationSec,
-                completed: session.completed,
-                type: session.type,
-              })
-              .then(({ error }) => {
-                if (error) console.error('Error syncing focus session:', error);
-              });
-          }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          supabase
+            .from('focus_sessions')
+            .insert({
+              id: session.id,
+              user_id: supabaseUserId,
+              task_id: session.taskId,
+              started_at: session.startedAt,
+              ended_at: session.endedAt,
+              duration_sec: session.durationSec,
+              completed: session.completed,
+              type: session.type,
+            })
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error syncing focus session:', error);
+                showStorageErrorToast('Failed to sync completed session to cloud.');
+              }
+            });
         }
       },
 
       /* ---- Cloud Sync ---- */
       syncFromSupabase: async () => {
-        if (!isSupabaseConfigured || !supabase) return;
-        const user = auth.currentUser;
-        if (!user) return;
-        const userId = getUuidFromUid(user.uid);
+        if (!isSupabaseConfigured || !supabase || !supabaseUserId) return;
 
         try {
           const { data: dbSessions, error } = await supabase
             .from('focus_sessions')
             .select('*')
-            .eq('user_id', userId);
+            .eq('user_id', supabaseUserId);
 
-          if (!error && dbSessions) {
+          if (error) {
+            console.error('Failed to sync focus sessions:', error);
+            showStorageErrorToast('Failed to load focus sessions from cloud.');
+          } else if (dbSessions) {
             const sessions: FocusSession[] = dbSessions.map((s: any) => ({
               id: s.id,
               taskId: s.task_id,
@@ -206,6 +204,7 @@ export const useFocusStore = create<FocusStore>()(
           }
         } catch (err) {
           console.error('Failed to sync focus sessions from cloud database:', err);
+          showStorageErrorToast('Cloud storage synchronization failed.');
         }
       },
     }),

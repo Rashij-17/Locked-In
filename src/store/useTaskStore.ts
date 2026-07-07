@@ -11,7 +11,7 @@ import { persist } from 'zustand/middleware';
 import type { Task, Tag, Priority } from '@/types';
 import { DEFAULT_TAGS } from '@/types';
 import { generateId, getTodayStr } from '@/lib/timeUtils';
-import { supabase, getUuidFromUid, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabaseUserId, showStorageErrorToast } from '@/lib/supabase';
 import { auth } from '@/lib/firebase';
 
 interface TaskStore {
@@ -76,29 +76,28 @@ export const useTaskStore = create<TaskStore>()(
         };
         set((s) => ({ tasks: [...s.tasks, task] }));
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            const userId = getUuidFromUid(user.uid);
-            supabase
-              .from('tasks')
-              .insert({
-                id: task.id,
-                user_id: userId,
-                title: task.title,
-                due_date: task.dueDate,
-                start_time: task.startTime,
-                end_time: task.endTime,
-                priority: task.priority,
-                completed: task.completed,
-                completed_at: task.completedAt,
-                tag_id: task.tagId,
-                notes: task.notes,
-              })
-              .then(({ error }) => {
-                if (error) console.error('Error syncing added task:', error);
-              });
-          }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          supabase
+            .from('tasks')
+            .insert({
+              id: task.id,
+              user_id: supabaseUserId,
+              title: task.title,
+              due_date: task.dueDate,
+              start_time: task.startTime,
+              end_time: task.endTime,
+              priority: task.priority,
+              completed: task.completed,
+              completed_at: task.completedAt,
+              tag_id: task.tagId,
+              notes: task.notes,
+            })
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error syncing added task:', error);
+                showStorageErrorToast('Failed to sync new task to cloud.');
+              }
+            });
         }
       },
 
@@ -110,30 +109,30 @@ export const useTaskStore = create<TaskStore>()(
           ),
         }));
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            const task = get().tasks.find((t) => t.id === id);
-            if (task) {
-              supabase
-                .from('tasks')
-                .update({
-                  title: task.title,
-                  due_date: task.dueDate,
-                  start_time: task.startTime,
-                  end_time: task.endTime,
-                  priority: task.priority,
-                  completed: task.completed,
-                  completed_at: task.completedAt,
-                  tag_id: task.tagId,
-                  notes: task.notes,
-                  updated_at: updatedAt,
-                })
-                .eq('id', id)
-                .then(({ error }) => {
-                  if (error) console.error('Error syncing updated task:', error);
-                });
-            }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          const task = get().tasks.find((t) => t.id === id);
+          if (task) {
+            supabase
+              .from('tasks')
+              .update({
+                title: task.title,
+                due_date: task.dueDate,
+                start_time: task.startTime,
+                end_time: task.endTime,
+                priority: task.priority,
+                completed: task.completed,
+                completed_at: task.completedAt,
+                tag_id: task.tagId,
+                notes: task.notes,
+                updated_at: updatedAt,
+              })
+              .eq('id', id)
+              .then(({ error }) => {
+                if (error) {
+                  console.error('Error syncing updated task:', error);
+                  showStorageErrorToast('Failed to sync task updates to cloud.');
+                }
+              });
           }
         }
       },
@@ -141,17 +140,17 @@ export const useTaskStore = create<TaskStore>()(
       deleteTask: (id) => {
         set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }));
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            supabase
-              .from('tasks')
-              .delete()
-              .eq('id', id)
-              .then(({ error }) => {
-                if (error) console.error('Error syncing deleted task:', error);
-              });
-          }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          supabase
+            .from('tasks')
+            .delete()
+            .eq('id', id)
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error syncing deleted task:', error);
+                showStorageErrorToast('Failed to sync deleted task to cloud.');
+              }
+            });
         }
       },
 
@@ -168,23 +167,23 @@ export const useTaskStore = create<TaskStore>()(
           }),
         }));
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            const task = get().tasks.find((t) => t.id === id);
-            if (task) {
-              supabase
-                .from('tasks')
-                .update({
-                  completed: task.completed,
-                  completed_at: task.completedAt,
-                  updated_at: updatedAt,
-                })
-                .eq('id', id)
-                .then(({ error }) => {
-                  if (error) console.error('Error syncing task toggle:', error);
-                });
-            }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          const task = get().tasks.find((t) => t.id === id);
+          if (task) {
+            supabase
+              .from('tasks')
+              .update({
+                completed: task.completed,
+                completed_at: task.completedAt,
+                updated_at: updatedAt,
+              })
+              .eq('id', id)
+              .then(({ error }) => {
+                if (error) {
+                  console.error('Error syncing task toggle:', error);
+                  showStorageErrorToast('Failed to sync task progress to cloud.');
+                }
+              });
           }
         }
       },
@@ -201,23 +200,22 @@ export const useTaskStore = create<TaskStore>()(
         };
         set((s) => ({ tags: [...s.tags, tag] }));
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            const userId = getUuidFromUid(user.uid);
-            supabase
-              .from('tags')
-              .insert({
-                id: tag.id,
-                user_id: userId,
-                name: tag.name,
-                color_slot: tag.colorSlot,
-                icon: tag.icon,
-              })
-              .then(({ error }) => {
-                if (error) console.error('Error syncing added tag:', error);
-              });
-          }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          supabase
+            .from('tags')
+            .insert({
+              id: tag.id,
+              user_id: supabaseUserId,
+              name: tag.name,
+              color_slot: tag.colorSlot,
+              icon: tag.icon,
+            })
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error syncing added tag:', error);
+                showStorageErrorToast('Failed to sync new tag to cloud.');
+              }
+            });
         }
       },
 
@@ -226,23 +224,23 @@ export const useTaskStore = create<TaskStore>()(
           tags: s.tags.map((t) => (t.id === id ? { ...t, ...updates } : t)),
         }));
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            const tag = get().tags.find((t) => t.id === id);
-            if (tag) {
-              supabase
-                .from('tags')
-                .update({
-                  name: tag.name,
-                  color_slot: tag.colorSlot,
-                  icon: tag.icon,
-                })
-                .eq('id', id)
-                .then(({ error }) => {
-                  if (error) console.error('Error syncing updated tag:', error);
-                });
-            }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          const tag = get().tags.find((t) => t.id === id);
+          if (tag) {
+            supabase
+              .from('tags')
+              .update({
+                name: tag.name,
+                color_slot: tag.colorSlot,
+                icon: tag.icon,
+              })
+              .eq('id', id)
+              .then(({ error }) => {
+                if (error) {
+                  console.error('Error syncing updated tag:', error);
+                  showStorageErrorToast('Failed to sync tag updates to cloud.');
+                }
+              });
           }
         }
       },
@@ -254,17 +252,17 @@ export const useTaskStore = create<TaskStore>()(
           tasks: s.tasks.map((t) => (t.tagId === id ? { ...t, tagId: null } : t)),
         }));
 
-        if (isSupabaseConfigured && supabase) {
-          const user = auth.currentUser;
-          if (user) {
-            supabase
-              .from('tags')
-              .delete()
-              .eq('id', id)
-              .then(({ error }) => {
-                if (error) console.error('Error syncing deleted tag:', error);
-              });
-          }
+        if (isSupabaseConfigured && supabase && supabaseUserId) {
+          supabase
+            .from('tags')
+            .delete()
+            .eq('id', id)
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error syncing deleted tag:', error);
+                showStorageErrorToast('Failed to sync deleted tag to cloud.');
+              }
+            });
         }
       },
 
@@ -309,23 +307,23 @@ export const useTaskStore = create<TaskStore>()(
 
       /* ---- Cloud Sync ---- */
       syncFromSupabase: async () => {
-        if (!isSupabaseConfigured || !supabase) return;
-        const user = auth.currentUser;
-        if (!user) return;
-        const userId = getUuidFromUid(user.uid);
+        if (!isSupabaseConfigured || !supabase || !supabaseUserId) return;
 
         try {
           const { data: dbTasks, error: taskErr } = await supabase
             .from('tasks')
             .select('*')
-            .eq('user_id', userId);
+            .eq('user_id', supabaseUserId);
 
           const { data: dbTags, error: tagErr } = await supabase
             .from('tags')
             .select('*')
-            .eq('user_id', userId);
+            .eq('user_id', supabaseUserId);
 
-          if (!taskErr && dbTasks) {
+          if (taskErr) {
+            console.error('Failed to sync tasks from cloud:', taskErr);
+            showStorageErrorToast('Failed to load tasks from cloud storage.');
+          } else if (dbTasks) {
             const tasks: Task[] = dbTasks.map((t: any) => ({
               id: t.id,
               title: t.title,
@@ -343,7 +341,10 @@ export const useTaskStore = create<TaskStore>()(
             set({ tasks });
           }
 
-          if (!tagErr && dbTags) {
+          if (tagErr) {
+            console.error('Failed to sync tags from cloud:', tagErr);
+            showStorageErrorToast('Failed to load tags from cloud storage.');
+          } else if (dbTags) {
             const tags: Tag[] = dbTags.map((t: any) => ({
               id: t.id,
               name: t.name,
@@ -363,6 +364,7 @@ export const useTaskStore = create<TaskStore>()(
           }
         } catch (err) {
           console.error('Failed to sync tasks/tags from cloud database:', err);
+          showStorageErrorToast('Cloud storage synchronization failed.');
         }
       },
     }),

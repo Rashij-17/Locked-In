@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSettingsStore } from '@/store/useSettingsStore';
-import { supabase, getUuidFromUid, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabaseUserId, showStorageErrorToast } from '@/lib/supabase';
 import { auth } from '@/lib/firebase';
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '';
@@ -68,7 +68,7 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
 
   /* --- Subscribe this device --- */
   const subscribe = useCallback(async () => {
-    if (!isSupabaseConfigured || !supabase) return;
+    if (!isSupabaseConfigured || !supabase || !supabaseUserId) return;
     const user = auth.currentUser;
     if (!user) return;
 
@@ -90,14 +90,13 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
 
       subRef.current = subscription;
       const json = subscription.toJSON();
-      const userId = getUuidFromUid(user.uid);
 
       // Detect user timezone
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
 
-      await supabase.from('push_subscriptions').upsert(
+      const { error } = await supabase.from('push_subscriptions').upsert(
         {
-          user_id: userId,
+          user_id: supabaseUserId,
           endpoint: json.endpoint,
           p256dh: json.keys?.p256dh ?? '',
           auth: json.keys?.auth ?? '',
@@ -106,6 +105,13 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
         },
         { onConflict: 'endpoint' }
       );
+
+      if (error) {
+        console.error('Push subscribe DB error:', error);
+        showStorageErrorToast('Failed to save notification subscription to cloud.');
+        setStatus('error');
+        return;
+      }
 
       setStatus('subscribed');
     } catch (err) {
@@ -123,7 +129,12 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
         const endpoint = subRef.current.endpoint;
         await subRef.current.unsubscribe();
         subRef.current = null;
-        await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+        
+        const { error } = await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+        if (error) {
+          console.error('Push unsubscribe DB error:', error);
+          showStorageErrorToast('Failed to remove notification subscription from cloud.');
+        }
       }
       setStatus('not-subscribed');
     } catch (err) {
@@ -135,16 +146,17 @@ export function usePushSubscription(): UsePushSubscriptionReturn {
   /* --- Keep reminder_mins in sync when settings change --- */
   useEffect(() => {
     if (status !== 'subscribed' || !subRef.current) return;
-    if (!isSupabaseConfigured || !supabase) return;
-    const user = auth.currentUser;
-    if (!user) return;
+    if (!isSupabaseConfigured || !supabase || !supabaseUserId) return;
 
     supabase
       .from('push_subscriptions')
       .update({ reminder_mins: taskReminderMins })
       .eq('endpoint', subRef.current.endpoint)
       .then(({ error }) => {
-        if (error) console.error('Error updating reminder_mins:', error);
+        if (error) {
+          console.error('Error updating reminder_mins:', error);
+          showStorageErrorToast('Failed to sync notification preferences to cloud.');
+        }
       });
   }, [taskReminderMins, status]);
 

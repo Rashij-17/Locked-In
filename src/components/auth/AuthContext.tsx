@@ -58,15 +58,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      setLoading(false);
 
       if (currentUser) {
-        // Asynchronously sync data from cloud if configured
-        useTaskStore.getState().syncFromSupabase();
-        useFocusStore.getState().syncFromSupabase();
-        useSettingsStore.getState().syncFromSupabase();
+        setLoading(true);
+        try {
+          const idToken = await currentUser.getIdToken();
+          const { signInToSupabase } = await import('@/lib/supabase');
+          const success = await signInToSupabase(idToken);
+          if (success) {
+            // Asynchronously sync data from cloud if configured
+            await Promise.all([
+              useTaskStore.getState().syncFromSupabase(),
+              useFocusStore.getState().syncFromSupabase(),
+              useSettingsStore.getState().syncFromSupabase(),
+            ]);
+          }
+        } catch (err) {
+          console.error('Supabase bridging failed:', err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        const { clearSupabaseSession } = await import('@/lib/supabase');
+        clearSupabaseSession();
+        setLoading(false);
       }
     });
 
@@ -104,6 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await signOut(auth);
+      const { clearSupabaseSession } = await import('@/lib/supabase');
+      clearSupabaseSession();
       router.push('/login');
     } catch (error) {
       console.error('Sign out failed:', error);
